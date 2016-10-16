@@ -98,9 +98,10 @@
 <meta property="og:image" content="http://i.imgur.com/WqO2GMA.jpg">
 <meta property="og:image" content="http://i.imgur.com/EdOBwIJ.jpg">
 <meta property="og:image" content="http://i.imgur.com/dODzEue.jpg">
+<meta property="og:image" content="http://i.imgur.com/OKro8SC.jpg">
 <meta property="og:image" content="http://i.imgur.com/w6ZU764.jpg">
 <meta property="og:image" content="http://i.imgur.com/YWyWI1d.jpg">
-<meta property="og:updated_time" content="2016-10-16T14:18:54.907Z">
+<meta property="og:updated_time" content="2016-10-16T14:28:33.307Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="SGI STL 空间配置器">
 <meta name="twitter:description" content="前言Allocator 处于STL的底层, 为所有的容器提供空间分配和管理, 是其他组件的基石.下图(摘自《STL源码剖析》P6)显示了STL各组件之间的关系: Container 通过 Allocator 取得数据存储空间, Alogrithm 通过 Iterator 存取 Container 内容, Functor 可以协助 Algorithm 完成不同的策略变化, Adapter 可以修饰或">
@@ -397,8 +398,7 @@ private:
   static char* _S_start_free;
   static char* _S_end_free;
   static size_t _S_heap_size;
-</code></pre><h3 id="内存池"><a href="#内存池" class="headerlink" title="内存池"></a>内存池</h3><p>考虑到小块内存分配导致的内存碎片问题, 二级分配器实现了一个轻量级的内存池, 并且考虑到在多线程环境下内存池的互斥访问问题.<br>当申请内存小于128bytes时, 直接从内存池分配, 并维护空闲链表, 由链表来分配同样的小内存和回收小内存. 同时为了方便管理, 将任何小块内存申请量上调为8的倍数, 小块内存最大为 128bytes, 这样便需要 128/8 = 16 个空闲链表, 每个链表分别维护的区块大小为 8, 16, 24, 32…128 bytes.  </p>
-<p>节点结构定义如下, 关于下面union类似的用法参考另外一篇博客.</p>
+</code></pre><h3 id="内存池"><a href="#内存池" class="headerlink" title="内存池"></a>内存池</h3><p>考虑到小块内存分配导致的内存碎片问题, 二级分配器实现了一个轻量级的内存池, 并且考虑到在多线程环境下内存池的互斥访问问题.<br>当申请内存小于128bytes时, 直接从内存池分配, 并维护空闲链表, 由链表来分配同样的小内存和回收小内存. 同时为了方便管理, 将任何小块内存申请量上调为8的倍数, 小块内存最大为 128bytes, 这样便需要 128/8 = 16 个空闲链表, 每个链表分别维护的区块大小为 8, 16, 24, 32…128 bytes.<br>节点结构定义如下, 关于下面union类似的用法参考另外一篇博客.</p>
 <pre><code>union obj
 {
     union obj *next;
@@ -415,10 +415,12 @@ private:
 <ul>
 <li><p>refill() 填充自由链表<br>流程图<br><img src="http://i.imgur.com/EdOBwIJ.jpg" alt=""></p>
 </li>
-<li><p>allocChunk() 从内存池或者堆中取空间<br>流程图<br><img src="http://i.imgur.com/dODzEue.jpg" alt=""></p>
+<li><p>allocChunk() 从内存池或系统heap或更大区块的 free list 取空间<br>流程图<br><img src="http://i.imgur.com/dODzEue.jpg" alt=""></p>
 </li>
-<li><p>deallocate() 空间回收<br>流程图<br><img src="http://i.imgur.com/w6ZU764.jpg" alt=""><br>区块回收示意图(摘自《STL源码剖析》P65 图2-6)<br><img src="http://i.imgur.com/YWyWI1d.jpg" alt="">  </p>
-</li>
+</ul>
+<p>内存池实际操作结果图(摘自《STL源码剖析》P69 图2-7)<br><img src="http://i.imgur.com/OKro8SC.jpg" alt=""></p>
+<ul>
+<li>deallocate() 空间回收<br>流程图<br><img src="http://i.imgur.com/w6ZU764.jpg" alt=""><br>区块回收示意图(摘自《STL源码剖析》P65 图2-6)<br><img src="http://i.imgur.com/YWyWI1d.jpg" alt="">  </li>
 </ul>
 <p>注: 从 deallocate() 实现来看, 回收空间时只是把空间交给 free list, 并没有还给系统 heap, 而在分配时如果内存池中的空间不够, 则会从系统 heap 分配空间(allocChunk).</p>
 <h3 id="成员函数-构造与析构"><a href="#成员函数-构造与析构" class="headerlink" title="成员函数, 构造与析构"></a>成员函数, 构造与析构</h3>
