@@ -350,7 +350,7 @@ void deallocate(pointer __p, size_type __n)
 
 void construct(pointer __p, const _Tp&amp; __val) { new(__p) _Tp(__val); }
 void destroy(pointer __p) { __p-&gt;~_Tp(); }
-</code></pre><p>其中内存分配函数 allocate() 调用 alloc::allocate(), 而 alloc 或为第一级配置器 __malloc_alloc_template (stl_alloc.h line 188, line 250)</p>
+</code></pre><p>其中内存分配函数 allocate() 调用 alloc::allocate(), 参数由分配的对象个数转为字节数, 而 alloc 或为第一级配置器 __malloc_alloc_template (stl_alloc.h line 188, line 250)</p>
 <pre><code>typedef __malloc_alloc_template&lt;0&gt; malloc_alloc;
 typedef malloc_alloc alloc;
 </code></pre><p>或为第二级配置器 __default_alloc_template (stl_alloc.h line 402)</p>
@@ -398,7 +398,8 @@ private:
 };
 </code></pre><p>链表定义如下  </p>
 <pre><code>static obj *free_list[num_of_list_];
-</code></pre><p>链表内存管理示意图<br><img src="http://i.imgur.com/YfiImVG.jpg" alt=""><br>简单的code实现<br><img src="http://i.imgur.com/r9F1GRa.jpg" alt=""></p>
+</code></pre><p>链表内存管理示意图<br><img src="http://i.imgur.com/YfiImVG.jpg" alt=""> </p>
+<p>简单的code实现<br><img src="http://i.imgur.com/r9F1GRa.jpg" alt=""></p>
 <h3 id="成员函数-空间分配与回收"><a href="#成员函数-空间分配与回收" class="headerlink" title="成员函数, 空间分配与回收"></a>成员函数, 空间分配与回收</h3><ul>
 <li>allocate() 空间分配<br>流程图<br><img src="http://i.imgur.com/RgsXIvD.jpg" alt="">  </li>
 </ul>
@@ -406,12 +407,11 @@ private:
 <ul>
 <li><p>refill() 填充自由链表<br>流程图<br><img src="http://i.imgur.com/EdOBwIJ.jpg" alt=""></p>
 </li>
-<li><p>allocChunk() 从内存池或者堆中取空间<br>流程图</p>
+<li><p>allocChunk() 从内存池或者堆中取空间<br>流程图<br><img src="http://i.imgur.com/V07K0nD.jpg" alt=""></p>
 </li>
-<li><p>deallocate() 空间回收<br>流程图<br><img src="http://i.imgur.com/w6ZU764.jpg" alt=""><br>区块回收示意图(摘自《STL源码剖析》P65 图2-6)<br><img src="http://i.imgur.com/YWyWI1d.jpg" alt="">  </p>
-</li>
+<li>deallocate() 空间回收<br>流程图<br><img src="http://i.imgur.com/w6ZU764.jpg" alt=""><br>区块回收示意图(摘自《STL源码剖析》P65 图2-6)<br><img src="http://i.imgur.com/YWyWI1d.jpg" alt="">  </li>
 </ul>
-<p>注: 从 deallocate() 实现来看, 回收空间时只是把空间交给 free list, 并没有还给系统 heap, 而在分配时如果内存池中的空间不够, 则会从系统 heap分配空间(allocChunk).</p>
+<p>注: 从 deallocate() 实现来看, 回收空间时只是把空间交给 free list, 并没有还给系统 heap, 而在分配时如果内存池中的空间不够, 则会从系统 heap 分配空间(allocChunk).</p>
 <h3 id="成员函数-构造与析构"><a href="#成员函数-构造与析构" class="headerlink" title="成员函数, 构造与析构"></a>成员函数, 构造与析构</h3>
           
         
