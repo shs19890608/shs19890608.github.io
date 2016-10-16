@@ -84,12 +84,26 @@
 
 
 
-<meta property="og:type" content="website">
-<meta property="og:title" content="HongShuang's blog">
-<meta property="og:url" content="http://yoursite.com/index.html">
+<meta name="description" content="前言Allocator 处于STL的底层, 为所有的容器提供空间分配和管理, 是其他组件的基石.下图(摘自《STL源码剖析》P6)显示了STL各组件之间的关系: Container 通过 Allocator 取得数据存储空间, Alogrithm 通过 Iterator 存取 Container 内容, Functor 可以协助 Algorithm 完成不同的策略变化, Adapter 可以修饰或">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SGI STL 空间配置器">
+<meta property="og:url" content="http://yoursite.com/2016/09/18/SGI STL 空间配置器/index.html">
 <meta property="og:site_name" content="HongShuang's blog">
+<meta property="og:description" content="前言Allocator 处于STL的底层, 为所有的容器提供空间分配和管理, 是其他组件的基石.下图(摘自《STL源码剖析》P6)显示了STL各组件之间的关系: Container 通过 Allocator 取得数据存储空间, Alogrithm 通过 Iterator 存取 Container 内容, Functor 可以协助 Algorithm 完成不同的策略变化, Adapter 可以修饰或">
+<meta property="og:image" content="http://i.imgur.com/BXiaYop.jpg">
+<meta property="og:image" content="http://i.imgur.com/raRHSUE.jpg">
+<meta property="og:image" content="http://i.imgur.com/YfiImVG.jpg">
+<meta property="og:image" content="http://i.imgur.com/r9F1GRa.jpg">
+<meta property="og:image" content="http://i.imgur.com/RgsXIvD.jpg">
+<meta property="og:image" content="http://i.imgur.com/WqO2GMA.jpg">
+<meta property="og:image" content="http://i.imgur.com/EdOBwIJ.jpg">
+<meta property="og:image" content="http://i.imgur.com/w6ZU764.jpg">
+<meta property="og:image" content="http://i.imgur.com/YWyWI1d.jpg">
+<meta property="og:updated_time" content="2016-10-11T13:28:36.812Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="HongShuang's blog">
+<meta name="twitter:title" content="SGI STL 空间配置器">
+<meta name="twitter:description" content="前言Allocator 处于STL的底层, 为所有的容器提供空间分配和管理, 是其他组件的基石.下图(摘自《STL源码剖析》P6)显示了STL各组件之间的关系: Container 通过 Allocator 取得数据存储空间, Alogrithm 通过 Iterator 存取 Container 内容, Functor 可以协助 Algorithm 完成不同的策略变化, Adapter 可以修饰或">
+<meta name="twitter:image" content="http://i.imgur.com/BXiaYop.jpg">
 
 
 
@@ -107,7 +121,7 @@
   };
 </script>
 
-  <title> HongShuang's blog </title>
+  <title> SGI STL 空间配置器 | HongShuang's blog </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="">
@@ -128,9 +142,7 @@
     
   
 
-  <div class="container one-collumn sidebar-position-left 
-   page-home 
- ">
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -207,9 +219,9 @@
         <div class="content-wrap">
           <div id="content" class="content">
             
-  <section id="posts" class="posts-expand">
+
+  <div id="posts" class="posts-expand">
     
-      
 
   
   
@@ -229,10 +241,7 @@
             
             
               
-                
-                <a class="post-title-link" href="/2016/09/18/SGI STL 空间配置器/" itemprop="url">
-                  SGI STL 空间配置器
-                </a>
+                SGI STL 空间配置器
               
             
           </h1>
@@ -291,9 +300,7 @@
       
 
       
-        
-          
-            <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>Allocator 处于STL的底层, 为所有的容器提供空间分配和管理, 是其他组件的基石.<br>下图(摘自《STL源码剖析》P6)显示了STL各组件之间的关系: Container 通过 Allocator 取得数据存储空间, Alogrithm 通过 Iterator 存取 Container 内容, Functor 可以协助 Algorithm 完成不同的策略变化, Adapter 可以修饰或套接 Functor.<br><img src="http://i.imgur.com/BXiaYop.jpg" alt=""></p>
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>Allocator 处于STL的底层, 为所有的容器提供空间分配和管理, 是其他组件的基石.<br>下图(摘自《STL源码剖析》P6)显示了STL各组件之间的关系: Container 通过 Allocator 取得数据存储空间, Alogrithm 通过 Iterator 存取 Container 内容, Functor 可以协助 Algorithm 完成不同的策略变化, Adapter 可以修饰或套接 Functor.<br><img src="http://i.imgur.com/BXiaYop.jpg" alt=""></p>
 <h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>C++标准规范了 allocator 的一些必要接口，由各个厂家实现, SGI版本(V3.3)使用的是标准的std::allocator.<br>PS. 《STL源码剖析》P47 说SGI STL的配置器与标准规范不同, 名称是 alloc 而非 allocator, 使用的话正确写法是<br>    vector<int, std::allocator<int=""> &gt; iv<br>而不是<br>    vector<int, std::alloc=""> iv<br><strong>已经过时了.</strong><br>参见 SGI V3.3 stl_vector.h line 154  </int,></int,></p>
 <pre><code>template &lt;class _Tp, class _Alloc = __STL_DEFAULT_ALLOCATOR(_Tp) &gt;
 class vector : protected _Vector_base&lt;_Tp, _Alloc&gt; 
@@ -413,16 +420,19 @@ private:
 </ul>
 <p>注: 从 deallocate() 实现来看, 回收空间时只是把空间交给 free list, 并没有还给系统 heap, 而在分配时如果内存池中的空间不够, 则会从系统 heap分配空间(allocChunk).</p>
 <h3 id="成员函数-构造与析构"><a href="#成员函数-构造与析构" class="headerlink" title="成员函数, 构造与析构"></a>成员函数, 构造与析构</h3>
-          
+      
+    </div>
+
+    <div>
+      
         
       
     </div>
 
     <div>
       
-    </div>
+        
 
-    <div>
       
     </div>
 
@@ -430,272 +440,32 @@ private:
       
 
       
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
             
+              <a href="/2016/09/17/字符数组, 字符串, 字符串指针/" rel="next" title="字符串,字符数组,以及字符串指针等相关的操作">
+                <i class="fa fa-chevron-left"></i> 字符串,字符数组,以及字符串指针等相关的操作
+              </a>
             
-              
-                
-                <a class="post-title-link" href="/2016/09/17/字符数组, 字符串, 字符串指针/" itemprop="url">
-                  字符串,字符数组,以及字符串指针等相关的操作
-                </a>
-              
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
             
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
-            <time itemprop="dateCreated" datetime="2016-09-17T08:55:29+08:00" content="2016-09-17">
-              2016-09-17
-            </time>
-          </span>
-
-          
-            <span class="post-category" >
-              &nbsp; | &nbsp;
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              <span class="post-meta-item-text">in</span>
-              
-                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
-                  <a href="/categories/C/" itemprop="url" rel="index">
-                    <span itemprop="name">C++</span>
-                  </a>
-                </span>
-
-                
-                
-
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
+          </div>
         </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
       
 
       
-        
-          
-            <h2 id="C-中对字符串的处理-字符数组，字符指针"><a href="#C-中对字符串的处理-字符数组，字符指针" class="headerlink" title="C 中对字符串的处理: 字符数组，字符指针"></a>C 中对字符串的处理: 字符数组，字符指针</h2><ul>
-<li><p>字符数组</p>
-<ol>
-<li><p>定义与初始化<br>char c[10] = {‘C’, ‘ ‘, ‘L’, ‘a’, ‘n’, ‘g’, ‘u’, ‘a’, ‘g’, ‘e’};<br>char c[11] = {“C Language”};<br>char c[11] = “C Language”;<br>char c[] = “C Language”;<br>定义时初始化可以不指定数组长度, 如 char c[] = “C Language”; 编译器自动处理长度为 11.<br>如果不作初始化赋值, 则必须指定长度, 如 char c[]; 是非法的.  </p>
-</li>
-<li><p>结束标志<br>C 中总是以 ‘\0’作为串的结束符, ASCII码为NUL. ‘\0’由编译器自动加上.<br>由于采用了’\0’标志, 字符串赋初值时无须指定数组的长度, 字符串处理函数遇到NUL时会认为字符串已经结束.<br>用字符串赋值比用字符逐个赋值要多占一个字节, 用于存放结束标志’\0’, 对于char c[] = “C Language” 其实际存放为<br>   |C| |L|a|n|g|u|a|g|e|\0|<br>如果定义 char c[10] = “C Language”; 编译器会提示初始化的字符串太长.<br>而 char c[10] = {‘C’, ‘ ‘, ‘L’, ‘a’, ‘n’, ‘g’, ‘u’, ‘a’, ‘g’, ‘e’}; 则没有问题.  </p>
-<pre><code>--- testNul()
-</code></pre></li>
-<li><p>求度, sizeof 与 strlen<br>区别:<br>a. sizeof 是运算符, 可以用类型(char/int)作参数; strlen 是函数, 只能用char*做参数, 且必须是以’\0’结尾的.<br>b. 数组传递给 sizeof 作参数时不退化, 仍然代表整个数组, 传递给strlen时则退化为指针处理.<br>大部分编译程序在编译时就把 sizeof 计算过了, 是类型或变量的长度, 这就是sizeof(x)可以用来定义数组维数的原因.<br>c. sizeof 计算的是分配的字符数组所占的实际内存空间的大小, 不受里面存储的内容改变, 即使在字符数组没有终止符’\0’ 的    时候, 也能够计算出数组长度.<br>strlen 计算字符串的长度, 以’\0’为字符串结束.  </p>
-<pre><code>--- calCharArrayLength()  
-</code></pre><p>所以如果用字符初始化数组,<br>char c[11] = {‘C’, ‘ ‘, ‘L’, ‘a’, ‘n’, ‘g’, ‘u’, ‘a’, ‘g’, ‘e’};<br>char c[11] = {‘C’, ‘ ‘, ‘L’, ‘a’, ‘n’, ‘g’, ‘u’, ‘a’, ‘g’, ‘e’, ‘\0’};<br>char c[] = {‘C’, ‘ ‘, ‘L’, ‘a’, ‘n’, ‘g’, ‘u’, ‘a’, ‘g’, ‘e’, ‘\0’};<br>三者等价, 长度均为 10.<br>char c[10] = {‘C’, ‘ ‘, ‘L’, ‘a’, ‘n’, ‘g’, ‘u’, ‘a’, ‘g’, ‘e’};<br>char c[] = {‘C’, ‘ ‘, ‘L’, ‘a’, ‘n’, ‘g’, ‘u’, ‘a’, ‘g’, ‘e’};<br>两者等价, 长度未知, 因为没有结束符. 实际中不应使用, 容易出现数组越界, 导致非法访问.<br>demo中c1[10] strlen = 20, sizeof = 10, 说明字符串长度为20,但实际分配的内存大小为10.<br>如果用字符串初始化数组, 如 char c[] = “C Language”; 计算字符串长度一定要用 strlen</p>
-</li>
-</ol>
-</li>
-<li><p>字符指针</p>
-<ol>
-<li><p>定义与初始化<br>char <em>string_ptr = “C language”;    // 用字符串初始化<br>char </em>string[] = “C language”;<br>char <em>string_ptr = string;            // 用字符数组初始化<br>ps. 对于 char </em>string_ptr = “C language”; 在C++11 中则使用 const char *string_ptr = “C language”; 否则编译出错.<br>参考 <a href="http://stackoverflow.com/questions/20944784/why-is-conversion-from-string-constant-to-char-valid-in-c-but-invalid-in-c" target="_blank" rel="external">http://stackoverflow.com/questions/20944784/why-is-conversion-from-string-constant-to-char-valid-in-c-but-invalid-in-c  </a>  </p>
-<pre><code>--- charPtrInit()
-</code></pre></li>
-<li><p>与字符数组的区别<br>字符数组是一个数组, 每个元素的值都可以改变; 而字符串指针指向的是一个<strong>常量字符串, 它被存放在程序的静态数据区, 一旦定义就不能改变</strong>.  </p>
-<pre><code>--- modifyCharPtrValue()  
-</code></pre><p>注: *ptr 指向的内容不能改变, 但是 ptr 指针本身可以改变, 可以指向其他的字符串.</p>
-</li>
-<li><p>对字符串系列操作<br>参考<br><a href="http://c.biancheng.net/cpp/u/hs2/" target="_blank" rel="external">http://c.biancheng.net/cpp/u/hs2/</a><br><a href="http://www.cplusplus.com/reference/cstring/strcpy/?kw=strcpy" target="_blank" rel="external">http://www.cplusplus.com/reference/cstring/strcpy/?kw=strcpy</a><br>通用的建议是 strncpy() 代替 strcmp(),  strncat() 代替 strcat(), strncmp() 代替 strcmp().</p>
-</li>
-</ol>
-</li>
-</ul>
-<h2 id="C-中对字符串的处理-string-类"><a href="#C-中对字符串的处理-string-类" class="headerlink" title="C++ 中对字符串的处理: string 类"></a>C++ 中对字符串的处理: string 类</h2><p>C++ 增强了对字符串的支持，既可以使用C风格的字符数组, 字符串，还可以使用内置的数据类型 string 类.  </p>
-<ul>
-<li><p>初始化<br>string 类有多种初始化方式, 详尽的参考 <a href="http://www.cplusplus.com/reference/string/string/string/" target="_blank" rel="external">http://www.cplusplus.com/reference/string/string/string/</a><br>常用的是直接用字符串初始化, 如 std::string s = “c++ language”;</p>
-</li>
-<li><p>与 const char* 之间的互转</p>
-<pre><code>---stringToCharPtr()
-</code></pre></li>
-<li><p>与 char[] 之间的互转</p>
-<pre><code>---stringTocharArray()
-</code></pre></li>
-</ul>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
       
     </footer>
   </article>
 
 
-    
-      
 
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/07/10/hello-world/" itemprop="url">
-                  Hello World
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">Veröffentlicht am</span>
-            <time itemprop="dateCreated" datetime="2016-07-10T16:20:48+08:00" content="2016-07-10">
-              2016-07-10
-            </time>
-          </span>
-
-          
-
-          
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>Welcome to <a href="https://hexo.io/" target="_blank" rel="external">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="external">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="external">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="external">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo new <span class="string">"My New Post"</span></div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="external">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo server</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="external">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo generate</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="external">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo deploy</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/deployment.html" target="_blank" rel="external">Deployment</a></p>
-
-          
-        
+    <div class="post-spread">
       
     </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
-  </section>
-
-  
+  </div>
 
 
           </div>
@@ -703,6 +473,10 @@ private:
 
 
           
+  <div class="comments" id="comments">
+    
+  </div>
+
 
         </div>
         
@@ -722,8 +496,17 @@ private:
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            Inhaltsverzeichnis
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Übersicht
+          </li>
+        </ul>
+      
 
-      <section class="site-overview sidebar-panel  sidebar-panel-active ">
+      <section class="site-overview sidebar-panel ">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
           <img class="site-author-image" itemprop="image"
                src="/images/avatar.gif"
@@ -766,6 +549,17 @@ private:
 
       </section>
 
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#简介"><span class="nav-number">2.</span> <span class="nav-text">简介</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#overview"><span class="nav-number">3.</span> <span class="nav-text">overview</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#allocator-定义"><span class="nav-number">4.</span> <span class="nav-text">allocator 定义</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#配置器的实现"><span class="nav-number">5.</span> <span class="nav-text">配置器的实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#default-alloc-template-定义"><span class="nav-number">5.0.1.</span> <span class="nav-text">__default_alloc_template 定义</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#内存池"><span class="nav-number">5.0.2.</span> <span class="nav-text">内存池</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#成员函数-空间分配与回收"><span class="nav-number">5.0.3.</span> <span class="nav-text">成员函数, 空间分配与回收</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#成员函数-构造与析构"><span class="nav-number">5.0.4.</span> <span class="nav-text">成员函数, 构造与析构</span></a></li></ol></li></ol></li></ol></div>
+            
+          </div>
+        </section>
       
 
     </div>
@@ -862,6 +656,10 @@ private:
   
 
   
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
 
   
 
