@@ -294,7 +294,11 @@
         
           
             <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>Allocator 处于STL的底层, 为所有的容器提供空间分配和管理, 是其他组件的基石.<br>下图(摘自《STL源码剖析》P6)显示了STL各组件之间的关系: Container 通过 Allocator 取得数据存储空间, Alogrithm 通过 Iterator 存取 Container 内容, Functor 可以协助 Algorithm 完成不同的策略变化, Adapter 可以修饰或套接 Functor.<br><img src="http://i.imgur.com/BXiaYop.jpg" alt=""></p>
-<h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>C++标准规范了 allocator 的一些必要接口，由各个厂家实现, SGI版本(V3.3)使用的是标准的std::allocator.<br>PS. 《STL源码剖析》P47 说SGI STL的配置器与标准规范不同, 名称是 alloc 而非 allocator, 使用的话正确写法是<br>    vector<int, std::allocator<int=""> &gt; iv<br>而不是<br>    vector<int, std::alloc=""> iv<br><strong>已经过时了.</strong><br>参见 SGI V3.3 stl_vector.h line 154  </int,></int,></p>
+<h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><p>C++标准规范了 allocator 的一些必要接口，由各个厂家实现, SGI版本(V3.3)使用的是标准的std::allocator.<br>PS. 《STL源码剖析》P47 说SGI STL的配置器与标准规范不同, 名称是 alloc 而非 allocator, 使用的话正确写法是  </p>
+<pre><code>vector&lt;int, std::allocator&lt;int&gt; &gt; iv  
+</code></pre><p>而不是  </p>
+<pre><code>vector&lt;int, std::alloc&gt; iv  
+</code></pre><p><strong>已经过时了.</strong><br>参见 SGI V3.3 stl_vector.h line 154  </p>
 <pre><code>template &lt;class _Tp, class _Alloc = __STL_DEFAULT_ALLOCATOR(_Tp) &gt;
 class vector : protected _Vector_base&lt;_Tp, _Alloc&gt; 
 {
