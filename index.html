@@ -407,9 +407,10 @@ private:
 <ul>
 <li><p>refill() 填充自由链表<br>流程图<br><img src="http://i.imgur.com/EdOBwIJ.jpg" alt=""></p>
 </li>
-<li><p>allocChunk() 从内存池或者堆中取空间<br>流程图<br><img src="http://i.imgur.com/V07K0nD.jpg" alt=""></p>
+<li><p>allocChunk() 从内存池或者堆中取空间<br>流程图<br><img src="http://i.imgur.com/dODzEue.jpg" alt=""></p>
 </li>
-<li>deallocate() 空间回收<br>流程图<br><img src="http://i.imgur.com/w6ZU764.jpg" alt=""><br>区块回收示意图(摘自《STL源码剖析》P65 图2-6)<br><img src="http://i.imgur.com/YWyWI1d.jpg" alt="">  </li>
+<li><p>deallocate() 空间回收<br>流程图<br><img src="http://i.imgur.com/w6ZU764.jpg" alt=""><br>区块回收示意图(摘自《STL源码剖析》P65 图2-6)<br><img src="http://i.imgur.com/YWyWI1d.jpg" alt="">  </p>
+</li>
 </ul>
 <p>注: 从 deallocate() 实现来看, 回收空间时只是把空间交给 free list, 并没有还给系统 heap, 而在分配时如果内存池中的空间不够, 则会从系统 heap 分配空间(allocChunk).</p>
 <h3 id="成员函数-构造与析构"><a href="#成员函数-构造与析构" class="headerlink" title="成员函数, 构造与析构"></a>成员函数, 构造与析构</h3>

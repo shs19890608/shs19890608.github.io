@@ -97,10 +97,10 @@
 <meta property="og:image" content="http://i.imgur.com/RgsXIvD.jpg">
 <meta property="og:image" content="http://i.imgur.com/WqO2GMA.jpg">
 <meta property="og:image" content="http://i.imgur.com/EdOBwIJ.jpg">
-<meta property="og:image" content="http://i.imgur.com/V07K0nD.jpg">
+<meta property="og:image" content="http://i.imgur.com/dODzEue.jpg">
 <meta property="og:image" content="http://i.imgur.com/w6ZU764.jpg">
 <meta property="og:image" content="http://i.imgur.com/YWyWI1d.jpg">
-<meta property="og:updated_time" content="2016-10-16T14:08:30.852Z">
+<meta property="og:updated_time" content="2016-10-16T14:18:54.907Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="SGI STL 空间配置器">
 <meta name="twitter:description" content="前言Allocator 处于STL的底层, 为所有的容器提供空间分配和管理, 是其他组件的基石.下图(摘自《STL源码剖析》P6)显示了STL各组件之间的关系: Container 通过 Allocator 取得数据存储空间, Alogrithm 通过 Iterator 存取 Container 内容, Functor 可以协助 Algorithm 完成不同的策略变化, Adapter 可以修饰或">
@@ -415,9 +415,10 @@ private:
 <ul>
 <li><p>refill() 填充自由链表<br>流程图<br><img src="http://i.imgur.com/EdOBwIJ.jpg" alt=""></p>
 </li>
-<li><p>allocChunk() 从内存池或者堆中取空间<br>流程图<br><img src="http://i.imgur.com/V07K0nD.jpg" alt=""></p>
+<li><p>allocChunk() 从内存池或者堆中取空间<br>流程图<br><img src="http://i.imgur.com/dODzEue.jpg" alt=""></p>
 </li>
-<li>deallocate() 空间回收<br>流程图<br><img src="http://i.imgur.com/w6ZU764.jpg" alt=""><br>区块回收示意图(摘自《STL源码剖析》P65 图2-6)<br><img src="http://i.imgur.com/YWyWI1d.jpg" alt="">  </li>
+<li><p>deallocate() 空间回收<br>流程图<br><img src="http://i.imgur.com/w6ZU764.jpg" alt=""><br>区块回收示意图(摘自《STL源码剖析》P65 图2-6)<br><img src="http://i.imgur.com/YWyWI1d.jpg" alt="">  </p>
+</li>
 </ul>
 <p>注: 从 deallocate() 实现来看, 回收空间时只是把空间交给 free list, 并没有还给系统 heap, 而在分配时如果内存池中的空间不够, 则会从系统 heap 分配空间(allocChunk).</p>
 <h3 id="成员函数-构造与析构"><a href="#成员函数-构造与析构" class="headerlink" title="成员函数, 构造与析构"></a>成员函数, 构造与析构</h3>
