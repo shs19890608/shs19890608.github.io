@@ -403,7 +403,7 @@ private:
 <pre><code>static obj *free_list[num_of_list_];
 </code></pre><p>链表内存管理示意图<br><img src="http://i.imgur.com/YfiImVG.jpg" alt=""> </p>
 <p>简单的code实现<br><img src="http://i.imgur.com/r9F1GRa.jpg" alt=""></p>
-<p>源码中 myString 的实现, 当执行 myString string1(“C-style string1”); 时传入参数 15bytes, 实际申请 16 bytes <em> 20(块), 完成后交给 free_list[1] 管理.<br>当执行 myString string2(“C-style string2”)时, free_list[1] 已有可用的内存空间. 下图中 free_list 是一个二级指针, 0x804b0a0, +index 为 0x804b0a4, 该地址上的数据从内存图上可知为 0x0804c018, 即为 free_list[1], 同时 result = </em>my_free_list = 0x0804c018, 这就是返回给调用者的可用的内存空间.<br><img src="http://i.imgur.com/4kHdUha.jpg" alt=""></p>
+<p>源码中 myString 的实现, 当执行 myString string1(“C-style string1”); 时传入参数 15bytes, 实际申请 16 bytes X 20(块), 完成后交给 free_list[1] 管理.<br>当执行 myString string2(“C-style string2”)时, free_list[1] 已有可用的内存空间. 下图中 free_list 是一个二级指针, 0x804b0a0, +index 为 0x804b0a4, 该地址上的数据从内存图上可知为 0x0804c018, 即为 free_list[1], 同时 result = *my_free_list = 0x0804c018, 这就是返回给调用者的可用的内存空间.<br><img src="http://i.imgur.com/4kHdUha.jpg" alt=""></p>
 <p>从下图中可看出, 0x0804c018 上的值 next 为 0x0804c028,  0x0804c028 上的值为 0x0804c038…这样构成了list. 而已经使用的地址空间为 0x0804c008, 值为 C-style string1.<br><img src="http://i.imgur.com/udeoDes.jpg" alt=""></p>
 <h3 id="成员函数-空间分配与回收"><a href="#成员函数-空间分配与回收" class="headerlink" title="成员函数, 空间分配与回收"></a>成员函数, 空间分配与回收</h3><ul>
 <li>allocate() 空间分配<br>流程图<br><img src="http://i.imgur.com/RgsXIvD.jpg" alt="">  </li>
