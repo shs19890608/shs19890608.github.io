@@ -366,7 +366,7 @@ Foo* pf = new Foo;
 ...
 delete pf;
 </code></pre><p>这两个操作都包含两个步骤:<br>new 操作步骤<br>1). 调用 ::operator new 配置内存  (关于 new, operator new, placement new 相关介绍, 参考 <a href="http://www.cnblogs.com/luxiaoxun/archive/2012/08/10/2631812.html" target="_blank" rel="external">这里</a>)<br>2). 调用构造函数 Foo::Foo() 构造对象并初始化<br>delete 操作同理, 过程相反<br>1). 调用析构函数 Foo::~Foo() 析构对象<br>2). 调用 ::operator delete 释放内存</p>
-<p>从上面 allocator的成员函数可以看出, 在 SGI 中, 将这两个步骤分开操作, 内存配置/释放由 alloc::allocate()/alloc::deallocate() 完成, 对象构造/析构由 ::construct()/::destroy() 完成.  </p>
+<p>从上面 allocator的成员函数可以看出, 在 SGI 中, 将这两个步骤分开操作, 内存配置/释放由 alloc::allocate()/alloc::deallocate() 完成, 对象构造/析构由 ::construct()/::destroy() 完成.<br><img src="http://i.imgur.com/g2671k7.jpg" alt=""></p>
 <h3 id="default-alloc-template-定义"><a href="#default-alloc-template-定义" class="headerlink" title="__default_alloc_template 定义"></a>__default_alloc_template 定义</h3><p>参见 stl_alloc.h line 289~400, 除了被 allocator 调用的 allocate()/deallocate()外, 还有以下关键成员</p>
 <pre><code>  union _Obj {
         union _Obj* _M_free_list_link;
@@ -393,7 +393,7 @@ private:
   static char* _S_start_free;
   static char* _S_end_free;
   static size_t _S_heap_size;
-</code></pre><h3 id="内存池"><a href="#内存池" class="headerlink" title="内存池"></a>内存池</h3><p>考虑到小块内存分配导致的内存碎片问题, 二级分配器实现了一个轻量级的内存池, 并且考虑到在多线程环境下内存池的互斥访问问题.<br>当申请内存小于128bytes时, 直接从内存池分配, 并维护空闲链表, 由链表来分配同样的小内存和回收小内存. 同时为了方便管理, 将任何小块内存申请量上调为8的倍数, 小块内存最大为 128bytes, 这样便需要 128/8 = 16 个空闲链表, 每个链表分别维护的区块大小为 8, 16, 24, 32…128 bytes.<br>节点结构定义如下, 关于下面union类似的用法参考另外一篇博客.</p>
+</code></pre><h3 id="内存池"><a href="#内存池" class="headerlink" title="内存池"></a>内存池</h3><p>考虑到小块内存分配导致的内存碎片问题, 二级分配器实现了一个轻量级的内存池, 并且考虑到在多线程环境下内存池的互斥访问问题.<br>当申请内存小于128bytes时, 直接从内存池分配, 并维护 free list, 由链表来分配同样的小内存和回收小内存. 同时为了方便管理, 将任何小块内存申请量上调为8的倍数, 小块内存最大为 128bytes, 这样便需要 128/8 = 16 个 free list, 每个链表分别维护的区块大小为 8, 16, 24, 32…128 bytes.<br>节点结构定义如下, 关于下面union类似的用法参考另外一篇博客.</p>
 <pre><code>union obj
 {
     union obj *next;
@@ -403,6 +403,8 @@ private:
 <pre><code>static obj *free_list[num_of_list_];
 </code></pre><p>链表内存管理示意图<br><img src="http://i.imgur.com/YfiImVG.jpg" alt=""> </p>
 <p>简单的code实现<br><img src="http://i.imgur.com/r9F1GRa.jpg" alt=""></p>
+<p>源码中 myString 的实现, 当执行 myString string1(“C-style string1”); 时传入参数 15bytes, 实际申请 16 bytes <em> 20(块), 完成后交给 free_list[1] 管理.<br>当执行 myString string2(“C-style string2”)时, free_list[1] 已有可用的内存空间. 下图中 free_list 是一个二级指针, 0x804b0a0, +index 为 0x804b0a4, 该地址上的数据从内存图上可知为 0x0804c018, 即为 free_list[1], 同时 result = </em>my_free_list = 0x0804c018, 这就是返回给调用者的可用的内存空间.<br><img src="http://i.imgur.com/4kHdUha.jpg" alt=""></p>
+<p>从下图中可看出, 0x0804c018 上的值 next 为 0x0804c028,  0x0804c028 上的值为 0x0804c038…这样构成了list. 而已经使用的地址空间为 0x0804c008, 值为 C-style string1.<br><img src="http://i.imgur.com/udeoDes.jpg" alt=""></p>
 <h3 id="成员函数-空间分配与回收"><a href="#成员函数-空间分配与回收" class="headerlink" title="成员函数, 空间分配与回收"></a>成员函数, 空间分配与回收</h3><ul>
 <li>allocate() 空间分配<br>流程图<br><img src="http://i.imgur.com/RgsXIvD.jpg" alt="">  </li>
 </ul>
@@ -418,7 +420,10 @@ private:
 <li>deallocate() 空间回收<br>流程图<br><img src="http://i.imgur.com/w6ZU764.jpg" alt=""><br>区块回收示意图(摘自《STL源码剖析》P65 图2-6)<br><img src="http://i.imgur.com/YWyWI1d.jpg" alt="">  </li>
 </ul>
 <p>注: 从 deallocate() 实现来看, 回收空间时只是把空间交给 free list, 并没有还给系统 heap, 而在分配时如果内存池中的空间不够, 则会从系统 heap 分配空间(allocChunk).</p>
-<h3 id="成员函数-构造与析构"><a href="#成员函数-构造与析构" class="headerlink" title="成员函数, 构造与析构"></a>成员函数, 构造与析构</h3>
+<h3 id="成员函数-构造与析构"><a href="#成员函数-构造与析构" class="headerlink" title="成员函数, 构造与析构"></a>成员函数, 构造与析构</h3><pre><code>void construct(pointer __p, const _Tp&amp; __val) { new(__p) _Tp(__val); }    // placement new, 调用构造函数 _Tp::_Tp(__val);
+void destroy(pointer __p) { __p-&gt;~_Tp(); }
+</code></pre><p>虽然 allocator 定义了 construct()/destroy(), 但是如前面所说, 对象构造/析构实际上由全局函数 ::construct()/::destroy() 完成, 位于 stl_construct.h 中, 并结合其他3个全局函数 uninitialized_copy()、uninitialized_fill()、uninitialized_fill_n() 用来填充、复制大块内存数据, 位于 stl_uninitialized.h 中.</p>
+
           
         
       
@@ -530,7 +535,8 @@ private:
       
         
           
-            <h2 id="C-中对字符串的处理-字符数组，字符指针"><a href="#C-中对字符串的处理-字符数组，字符指针" class="headerlink" title="C 中对字符串的处理: 字符数组，字符指针"></a>C 中对字符串的处理: 字符数组，字符指针</h2><ul>
+            <p><a href="https://github.com/shuanghong/C-Cpp-Programming/blob/master/char_string/CharStringOperation.cpp" target="_blank" rel="external">源码</a></p>
+<h2 id="C-中对字符串的处理-字符数组，字符指针"><a href="#C-中对字符串的处理-字符数组，字符指针" class="headerlink" title="C 中对字符串的处理: 字符数组，字符指针"></a>C 中对字符串的处理: 字符数组，字符指针</h2><ul>
 <li><p>字符数组</p>
 <ol>
 <li><p>定义与初始化<br>char c[10] = {‘C’, ‘ ‘, ‘L’, ‘a’, ‘n’, ‘g’, ‘u’, ‘a’, ‘g’, ‘e’};<br>char c[11] = {“C Language”};<br>char c[11] = “C Language”;<br>char c[] = “C Language”;<br>定义时初始化可以不指定数组长度, 如 char c[] = “C Language”; 编译器自动处理长度为 11.<br>如果不作初始化赋值, 则必须指定长度, 如 char c[]; 是非法的.  </p>
