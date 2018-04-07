@@ -104,7 +104,7 @@
 <meta property="og:image" content="http://i.imgur.com/OKro8SC.jpg">
 <meta property="og:image" content="http://i.imgur.com/w6ZU764.jpg">
 <meta property="og:image" content="http://i.imgur.com/YWyWI1d.jpg">
-<meta property="og:updated_time" content="2016-10-23T13:04:27.494Z">
+<meta property="og:updated_time" content="2016-10-30T13:05:16.612Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="SGI STL 空间配置器">
 <meta name="twitter:description" content="前言Allocator 处于STL的底层, 为所有的容器提供空间分配和管理, 是其他组件的基石.下图(摘自《STL源码剖析》P6)显示了STL各组件之间的关系: Container 通过 Allocator 取得数据存储空间, Alogrithm 通过 Iterator 存取 Container 内容, Functor 可以协助 Algorithm 完成不同的策略变化, Adapter 可以修饰或">
@@ -378,7 +378,7 @@ Foo* pf = new Foo;
 ...
 delete pf;
 </code></pre><p>这两个操作都包含两个步骤:<br>new 操作步骤<br>1). 调用 ::operator new 配置内存  (关于 new, operator new, placement new 相关介绍, 参考 <a href="http://www.cnblogs.com/luxiaoxun/archive/2012/08/10/2631812.html" target="_blank" rel="external">这里</a>)<br>2). 调用构造函数 Foo::Foo() 构造对象并初始化<br>delete 操作同理, 过程相反<br>1). 调用析构函数 Foo::~Foo() 析构对象<br>2). 调用 ::operator delete 释放内存</p>
-<p>从上面 allocator的成员函数可以看出, 在 SGI 中, 将这两个步骤分开操作, 内存配置/释放由 alloc::allocate()/alloc::deallocate() 完成, 对象构造/析构由 ::construct()/::destroy() 完成.<br><img src="http://i.imgur.com/g2671k7.jpg" alt=""></p>
+<p>从上面 allocator的成员函数可以看出, 在 SGI 中, 将这两个步骤分开操作, 内存配置/释放由 alloc::allocate()/alloc::deallocate() 完成, 对象构造/析构由 ::construct()/::destroy() 完成. 目的是提高效率, 节省某些不必要调用构造函数的开销.<br><img src="http://i.imgur.com/g2671k7.jpg" alt=""></p>
 <h3 id="default-alloc-template-定义"><a href="#default-alloc-template-定义" class="headerlink" title="__default_alloc_template 定义"></a>__default_alloc_template 定义</h3><p>参见 stl_alloc.h line 289~400, 除了被 allocator 调用的 allocate()/deallocate()外, 还有以下关键成员</p>
 <pre><code>  union _Obj {
         union _Obj* _M_free_list_link;
@@ -459,7 +459,7 @@ void destroy(pointer __p) { __p-&gt;~_Tp(); }
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2016/09/17/字符数组, 字符串, 字符串指针/" rel="next" title="字符串,字符数组,以及字符串指针等相关的操作">
+              <a href="/2016/09/17/字符数组, 字符指针, 字符串/" rel="next" title="字符串,字符数组,以及字符串指针等相关的操作">
                 <i class="fa fa-chevron-left"></i> 字符串,字符数组,以及字符串指针等相关的操作
               </a>
             
@@ -591,7 +591,7 @@ void destroy(pointer __p) { __p-&gt;~_Tp(); }
         <div class="copyright" >
   
   &copy; 
-  <span itemprop="copyrightYear">2016</span>
+  <span itemprop="copyrightYear">2018</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
