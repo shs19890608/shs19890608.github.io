@@ -571,8 +571,8 @@ const char *string_ptr = string;        // 用字符数组初始化
 </code></pre><h4 id="对字符串系列操作"><a href="#对字符串系列操作" class="headerlink" title="对字符串系列操作"></a>对字符串系列操作</h4><p>参考<br><a href="http://c.biancheng.net/cpp/u/hs2/" target="_blank" rel="external">http://c.biancheng.net/cpp/u/hs2/</a><br><a href="http://www.cplusplus.com/reference/cstring/strcpy/?kw=strcpy" target="_blank" rel="external">http://www.cplusplus.com/reference/cstring/strcpy/?kw=strcpy</a></p>
 <pre><code>用 strncpy() 代替 strcpy(),  strncat() 代替 strcat(), strncmp() 代替 strcmp().
 </code></pre><h2 id="C-中对字符串的处理-string-类"><a href="#C-中对字符串的处理-string-类" class="headerlink" title="C++ 中对字符串的处理: string 类"></a>C++ 中对字符串的处理: string 类</h2><p>C++ 增强了对字符串的支持，既可以使用C风格的字符数组, 字符串，还可以使用内置的数据类型 string 类.  </p>
-<h4 id="初始化"><a href="#初始化" class="headerlink" title="初始化"></a>初始化</h4><p>string 类有多种初始化方式, 详尽的参考 <a href="http://www.cplusplus.com/reference/string/string/string/" target="_blank" rel="external">http://www.cplusplus.com/reference/string/string/string/</a><br>常用的是直接用字符串初始化, 如 std::string s = “c++ language”;</p>
-<h4 id="与-const-char-互转"><a href="#与-const-char-互转" class="headerlink" title="与 const char* 互转"></a>与 const char* 互转</h4><p>参见<a href="https://github.com/shuanghong/C-Cpp-Programming/blob/master/Char_Array_Ptr_String/CharStringOperation.cpp" target="_blank" rel="external">源码</a> stringToCharPtr()</p>
+<h3 id="初始化"><a href="#初始化" class="headerlink" title="初始化"></a>初始化</h3><p>string 类有多种初始化方式, 详尽的参考 <a href="http://www.cplusplus.com/reference/string/string/string/" target="_blank" rel="external">http://www.cplusplus.com/reference/string/string/string/</a><br>常用的是直接用字符串初始化, 如 std::string s = “c++ language”;</p>
+<h3 id="与-const-char-互转"><a href="#与-const-char-互转" class="headerlink" title="与 const char* 互转"></a>与 const char* 互转</h3><p>参见<a href="https://github.com/shuanghong/C-Cpp-Programming/blob/master/Char_Array_Ptr_String/CharStringOperation.cpp" target="_blank" rel="external">源码</a> stringToCharPtr()</p>
 <p>注意: str.c_str() 返回 const char* 指针, 指向以空字符结尾的字符数组, 数组内容等于 string 对象内容.</p>
 <ul>
 <li><p>虽然是 const char<em>, 一般来说指向的内容不可改变. 但是 string 类的实现实际上封装着一个 char 指针, c_str() 直接返回该指针的引用, 其生命周期是 string 对象的生命期, 由 string 管理. 因此 const char</em> 指向的字符数组是临时的, 当有改变这些数据的成员函数被调用后, 其中的数据就会失效.</p>
@@ -595,7 +595,7 @@ strncpy(str_cpoy, str.c_str(), str.length()+1);
 str = &quot;C++ language&quot;;
 
 printf(&quot;%s\n&quot;, str_cpoy);    // str 对象改变但输出不变: C/C++ language
-</code></pre><h4 id="与-char-之间互转"><a href="#与-char-之间互转" class="headerlink" title="与 char[] 之间互转"></a>与 char[] 之间互转</h4><p>参见<a href="https://github.com/shuanghong/C-Cpp-Programming/blob/master/Char_Array_Ptr_String/CharStringOperation.cpp" target="_blank" rel="external">源码</a> stringTocharArray()</p>
+</code></pre><h3 id="与-char-之间互转"><a href="#与-char-之间互转" class="headerlink" title="与 char[] 之间互转"></a>与 char[] 之间互转</h3><p>参见<a href="https://github.com/shuanghong/C-Cpp-Programming/blob/master/Char_Array_Ptr_String/CharStringOperation.cpp" target="_blank" rel="external">源码</a> stringTocharArray()</p>
 <ul>
 <li><p>注意: char <em>strncpy(char </em>dest, const char *src, std::size_t count);</p>
 <p>  复制 src 所指向的字符串至多 count 个字符<strong>（包含终止空字符）</strong>到 dest 所指向的字符数组.<br>  若在复制整个字符串 src 前抵达 count ，则产生的字符数组不是空终止的;<br>  若在复制来自 src 的终止空字符后未抵达 count, 则写入额外的空字符到 dest, 直至写入总共 count 个字符;<br>  若字符串重叠, 则行为未定义!!!</p>
