@@ -574,7 +574,7 @@ move operator=            // 调用移动赋值运算符, 避免拷贝.
 destructor
 ==============================
 destructor
-</code></pre><h3 id="std-move"><a href="#std-move" class="headerlink" title="std::move()"></a>std::move()</h3><p>编译器只对右值引用才能调用转移构造函数和转移赋值运算符, 如果已知一个命名对象(左值引用)不再被使用而想对它调用转移构造函数和转移赋值函数, 则可以通过标准库函数 std::move() 来实现.<br>std::move() 本身并不移动任何东西, 它只是将左值转换成右值并返回参数的右值引用, 其实现如下:</p>
+</code></pre><h3 id="std-move"><a href="#std-move" class="headerlink" title="std::move()"></a>std::move()</h3><p>编译器只对右值引用才能调用移动构造函数和移动赋值运算符, 如果已知一个命名对象(左值引用)不再被使用而想对它调用移动构造函数和移动赋值函数, 则可以通过标准库函数 std::move() 来实现.<br>std::move() 本身并不移动任何东西, 它只是将左值转换成右值并返回参数的右值引用, 其实现如下:</p>
 <pre><code>template&lt;typename T&gt; 
 decltype(auto) move(T&amp;&amp; param)
 {
