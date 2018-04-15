@@ -85,27 +85,27 @@
 
 
 <meta name="description" content="移动语义(move)引入背景移动语义的引入是为了解决在进行大量数据复制的时候, 将动态内存的所有权直接转让出去, 避免大量的无用的拷贝操作. 如下面两种场景:
-swap的实现, 交换两个对象.    template&amp;lt;typename T&amp;gt;
-    inline void swap(T&amp;amp; a, T&amp;amp; b)
-    {
-        T temp(a);">
+swap的实现, 交换两个对象.template&amp;lt;typename T&amp;gt;
+inline void swap(T&amp;amp; a, T&amp;amp; b)
+{
+    T temp(a);        // 调用拷贝构造函数">
 <meta property="og:type" content="article">
 <meta property="og:title" content="C++11 之右值引用、移动语义">
 <meta property="og:url" content="http://yoursite.com/2018/04/01/C++11 之右值引用、移动语义/index.html">
 <meta property="og:site_name" content="HongShuang's blog">
 <meta property="og:description" content="移动语义(move)引入背景移动语义的引入是为了解决在进行大量数据复制的时候, 将动态内存的所有权直接转让出去, 避免大量的无用的拷贝操作. 如下面两种场景:
-swap的实现, 交换两个对象.    template&amp;lt;typename T&amp;gt;
-    inline void swap(T&amp;amp; a, T&amp;amp; b)
-    {
-        T temp(a);">
-<meta property="og:updated_time" content="2018-04-15T13:46:11.393Z">
+swap的实现, 交换两个对象.template&amp;lt;typename T&amp;gt;
+inline void swap(T&amp;amp; a, T&amp;amp; b)
+{
+    T temp(a);        // 调用拷贝构造函数">
+<meta property="og:updated_time" content="2018-04-15T14:51:20.101Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="C++11 之右值引用、移动语义">
 <meta name="twitter:description" content="移动语义(move)引入背景移动语义的引入是为了解决在进行大量数据复制的时候, 将动态内存的所有权直接转让出去, 避免大量的无用的拷贝操作. 如下面两种场景:
-swap的实现, 交换两个对象.    template&amp;lt;typename T&amp;gt;
-    inline void swap(T&amp;amp; a, T&amp;amp; b)
-    {
-        T temp(a);">
+swap的实现, 交换两个对象.template&amp;lt;typename T&amp;gt;
+inline void swap(T&amp;amp; a, T&amp;amp; b)
+{
+    T temp(a);        // 调用拷贝构造函数">
 
 
 
@@ -315,134 +315,130 @@ swap的实现, 交换两个对象.    template&amp;lt;typename T&amp;gt;
 
       
         <h2 id="移动语义-move-引入背景"><a href="#移动语义-move-引入背景" class="headerlink" title="移动语义(move)引入背景"></a>移动语义(move)引入背景</h2><p>移动语义的引入是为了解决在进行大量数据复制的时候, 将动态内存的所有权直接转让出去, 避免大量的无用的拷贝操作. 如下面两种场景:</p>
-<h3 id="swap的实现-交换两个对象"><a href="#swap的实现-交换两个对象" class="headerlink" title="swap的实现, 交换两个对象."></a>swap的实现, 交换两个对象.</h3><pre><code>    template&lt;typename T&gt;
-    inline void swap(T&amp; a, T&amp; b)
+<h3 id="swap的实现-交换两个对象"><a href="#swap的实现-交换两个对象" class="headerlink" title="swap的实现, 交换两个对象."></a>swap的实现, 交换两个对象.</h3><pre><code>template&lt;typename T&gt;
+inline void swap(T&amp; a, T&amp; b)
+{
+    T temp(a);        // 调用拷贝构造函数
+    a=b;            // 调用拷贝赋值运算符
+    b=temp;            // 调用拷贝赋值运算符
+}
+</code></pre><p>swap 实现的过程中调用了一次拷贝构造函数和两次赋值运算, 然而这对于要实现交换的目的来说, 是没有必要的.<br>如果 T 是一个带有指针成员的类对象, 则会出现大量无意义的拷贝.</p>
+<h3 id="不必要的拷贝-返回临时对象"><a href="#不必要的拷贝-返回临时对象" class="headerlink" title="不必要的拷贝,返回临时对象"></a>不必要的拷贝,返回临时对象</h3><p>以string类的某一实现为例:</p>
+<pre><code>class String
+{
+public:
+    String()
+    : m_dataptr(new char[1])
     {
-        T temp(a);        // 调用拷贝构造函数
-        a=b;            // 调用拷贝赋值运算符
-        b=temp;            // 调用拷贝赋值运算符
+        std::cout &lt;&lt; &quot;constructor()&quot; &lt;&lt; std::endl;
+        *m_dataptr = &apos;\0&apos;;
     }
-swap 实现的过程中调用了一次拷贝构造函数和两次赋值运算, 然而这对于要实现交换的目的来说, 是没有必要的.  
-如果 T 是一个带有指针成员的类对象, 则会出现大量无意义的拷贝.
-</code></pre><h3 id="不必要的拷贝-返回临时对象"><a href="#不必要的拷贝-返回临时对象" class="headerlink" title="不必要的拷贝,返回临时对象"></a>不必要的拷贝,返回临时对象</h3><pre><code>以string类的某一实现为例:
-
-    class String
+    String(const char *str)
+    : m_dataptr(new char[strlen(str) + 1])
     {
-    public:
-        String()
-        : m_dataptr(new char[1])
-        {
-            std::cout &lt;&lt; &quot;constructor()&quot; &lt;&lt; std::endl;
-            *m_dataptr = &apos;\0&apos;;
-        }
-        String(const char *str)
-        : m_dataptr(new char[strlen(str) + 1])
-        {
-            std::cout &lt;&lt; &quot;constructor(char *)&quot; &lt;&lt; std::endl;
-            strcpy(m_dataptr, str);
-        }
-        String(const String &amp;rhs)
-        : m_dataptr(new char[rhs.size() + 1])
-        {
-            std::cout &lt;&lt; &quot;copy constructor&quot; &lt;&lt; std::endl;
-            strcpy(m_dataptr, rhs.c_str());
-        }
-
-        ~String() noexcept
-        {
-            delete[] m_dataptr;
-        }
-
-        String&amp; operator=(const String&amp; rhs)
-        {
-          std::cout &lt;&lt; &quot;copy operator=&quot; &lt;&lt; std::endl;
-
-          char* tmp = rhs.m_dataptr;
-          m_dataptr = new char[rhs.size() + 1];
-          strcpy(m_dataptr, rhs.c_str());
-          delete[] tmp;
-
-          return *this;
-        }
-    ...
+        std::cout &lt;&lt; &quot;constructor(char *)&quot; &lt;&lt; std::endl;
+        strcpy(m_dataptr, str);
+    }
+    String(const String &amp;rhs)
+    : m_dataptr(new char[rhs.size() + 1])
+    {
+        std::cout &lt;&lt; &quot;copy constructor&quot; &lt;&lt; std::endl;
+        strcpy(m_dataptr, rhs.c_str());
     }
 
-    String getString()
+    ~String() noexcept
     {
-        String str(&quot;string&quot;);
-        return str;            //return &quot;string&quot;;
+        delete[] m_dataptr;
     }
 
-    int main(int argc, char *argv[])
+    String&amp; operator=(const String&amp; rhs)
     {
-        std::cout &lt;&lt; &quot;------------------------------&quot; &lt;&lt; std::endl;
+      std::cout &lt;&lt; &quot;copy operator=&quot; &lt;&lt; std::endl;
 
-        String str = getString();        // 1)
-        std::cout &lt;&lt; &quot;******************************&quot; &lt;&lt; std::endl;
+      char* tmp = rhs.m_dataptr;
+      m_dataptr = new char[rhs.size() + 1];
+      strcpy(m_dataptr, rhs.c_str());
+      delete[] tmp;
 
-        str = getString();                // 2)
-        std::cout &lt;&lt; &quot;==============================&quot; &lt;&lt; std::endl;
-
-        return 0;
+      return *this;
     }
+...
+}
 
-程序输出如下:
+String getString()
+{
+    String str(&quot;string&quot;);
+    return str;            //return &quot;string&quot;;
+}
 
-    ------------------------------
-    constructor(char *)                // 1) getString() 里的 str 构造
-    ******************************
-    constructor(char *)                // 2) getString() 里的 str 构造
-    copy operator=                    // 3) getString() 返回值(临时对象, 右值)赋值给左值
-    destructor                        // 4) 临时对象析构
-    ==============================
-    destructor                        // 5) str 析构
+int main(int argc, char *argv[])
+{
+    std::cout &lt;&lt; &quot;------------------------------&quot; &lt;&lt; std::endl;
 
+    String str = getString();        // 1)
+    std::cout &lt;&lt; &quot;******************************&quot; &lt;&lt; std::endl;
 
-- 对于1)对象初始化, 由于编译器的返回值优化(RVO), 只调用了string的构造函数, 没有返回时临时对象的产生
-- 对于2)赋值操作, getString()返回临时对象并赋值给str, 调用了拷贝赋值运算符, 同样也会有拷贝操作.
-</code></pre><h3 id="容器-vector-的操作"><a href="#容器-vector-的操作" class="headerlink" title="容器 vector 的操作"></a>容器 vector 的操作</h3><pre><code>    vector&lt;int&gt; doubleValues (const vector&lt;int&gt;&amp; v)
-    {
-         vector&lt;int&gt; new_values;
-         for (auto x : v)
-             new_values.push_back(2 * x);    
-         return new_values;
-    }
+    str = getString();                // 2)
+    std::cout &lt;&lt; &quot;==============================&quot; &lt;&lt; std::endl;
 
-    int main()
-    {
-         vector&lt;int&gt; v;
-         for ( int i = 0; i &lt; 2; i++ )
-         {
-             v.push_back(i);
-         }
-         v = doubleValues(v);
-    }
-- doubleValues() 返回时会产生临时的vector, 这个可以被编译器优化(RVO)
-- v = doubleValues, 将临时变量赋值给v, 则无法避免. 需要重新分配内存空间,且需要迭代整个vector.
-</code></pre><h2 id="右值引用、右值"><a href="#右值引用、右值" class="headerlink" title="右值引用、右值"></a>右值引用、右值</h2><p>为了实现移动语义, C++11 引入了右值引用, 即绑定到右值的引用, 采用 T&amp;&amp; 语法形式. 传统的引用被称为左值引用, 采用 T&amp; 语法形式.</p>
+    return 0;
+}
+</code></pre><p>程序输出如下:</p>
+<pre><code>------------------------------
+constructor(char *)                // 1) getString() 里的 str 构造
+******************************
+constructor(char *)                // 2) getString() 里的 str 构造
+copy operator=                    // 3) getString() 返回值(临时对象, 右值)赋值给左值
+destructor                        // 4) 临时对象析构
+==============================
+destructor                        // 5) str 析构
+</code></pre><ul>
+<li>对于1)对象初始化, 由于编译器的返回值优化(RVO), 只调用了string的构造函数, 没有返回时临时对象的产生</li>
+<li>对于2)赋值操作, getString()返回临时对象并赋值给str, 调用了拷贝赋值运算符, 同样也会有拷贝操作.</li>
+</ul>
+<h3 id="容器-vector-的操作"><a href="#容器-vector-的操作" class="headerlink" title="容器 vector 的操作"></a>容器 vector 的操作</h3><pre><code>vector&lt;int&gt; doubleValues (const vector&lt;int&gt;&amp; v)
+{
+     vector&lt;int&gt; new_values;
+     for (auto x : v)
+         new_values.push_back(2 * x);    
+     return new_values;
+}
+
+int main()
+{
+     vector&lt;int&gt; v;
+     for ( int i = 0; i &lt; 2; i++ )
+     {
+         v.push_back(i);
+     }
+     v = doubleValues(v);
+}
+</code></pre><ul>
+<li>doubleValues() 返回时会产生临时的vector, 这个可以被编译器优化(RVO)</li>
+<li>v = doubleValues, 将临时变量赋值给v, 则无法避免. 需要重新分配内存空间,且需要迭代整个vector.</li>
+</ul>
+<h2 id="右值引用、右值"><a href="#右值引用、右值" class="headerlink" title="右值引用、右值"></a>右值引用、右值</h2><p>为了实现移动语义, C++11 引入了右值引用, 即绑定到右值的引用, 采用 T&amp;&amp; 语法形式. 传统的引用被称为左值引用, 采用 T&amp; 语法形式.</p>
 <pre><code>int i = 0;
 int&amp; j = i;        // 左值引用 j 绑定到左值 i
 int&amp;&amp; k = 0;    // 右值引用 k 绑定到右值 0
 </code></pre><h3 id="左值与右值"><a href="#左值与右值" class="headerlink" title="左值与右值"></a>左值与右值</h3><p>在C++11中, 所有的表达式和变量的值必属于左值、将亡值、纯右值三者之一.</p>
-<h4 id="左值-一般位于赋值符号的左边-有名字的值-可以使用-amp-操作符取地址"><a href="#左值-一般位于赋值符号的左边-有名字的值-可以使用-amp-操作符取地址" class="headerlink" title="左值: 一般位于赋值符号的左边, 有名字的值, 可以使用&amp;操作符取地址."></a>左值: 一般位于赋值符号的左边, 有名字的值, 可以使用&amp;操作符取地址.</h4><pre><code>    void std::move(T&amp;&amp; param)
-    {
-        ...    //param有名字, 在函数内部仍然是左值, 即使声明它时用的是右值引用
+<h4 id="左值-一般位于赋值符号的左边-有名字的值-可以使用-amp-操作符取地址"><a href="#左值-一般位于赋值符号的左边-有名字的值-可以使用-amp-操作符取地址" class="headerlink" title="左值: 一般位于赋值符号的左边, 有名字的值, 可以使用&amp;操作符取地址."></a>左值: 一般位于赋值符号的左边, 有名字的值, 可以使用&amp;操作符取地址.</h4><pre><code>void std::move(T&amp;&amp; param)
+{
+    ...    //param有名字, 在函数内部仍然是左值, 即使声明它时用的是右值引用
+}
+</code></pre><p>如 <a href="https://www.zhihu.com/question/35100630" target="_blank" rel="external">https://www.zhihu.com/question/35100630</a>中的代码:</p>
+<pre><code>class Foo
+{
+private: 
+    string data;
+public:
+    Foo(string&amp;&amp; s)
+    {    
+        data = s; //这里调用了string的拷贝构造函数, 因为 s 还是左值.
+        ....
     }
-
-如 [https://www.zhihu.com/question/35100630](https://www.zhihu.com/question/35100630)中的代码:
-
-    class FOO
-    {
-    private: 
-        string data;
-    public:
-        Foo(string&amp;&amp; s)
-        {    
-            data = s; //这里调用了string的拷贝构造函数, 因为 s 还是左值.
-            ....
-        }
-    ... 
-    }
+... 
+}
 </code></pre><h4 id="右值-一般位于赋值符号的右边-没有名字的值-不能取地址-临时值"><a href="#右值-一般位于赋值符号的右边-没有名字的值-不能取地址-临时值" class="headerlink" title="右值: 一般位于赋值符号的右边, 没有名字的值, 不能取地址, 临时值."></a>右值: 一般位于赋值符号的右边, 没有名字的值, 不能取地址, 临时值.</h4><pre><code>String getString()
 {
     String str(&quot;string&quot;);
@@ -538,7 +534,33 @@ move constructor            // 临时对象构造 str1也调用了移动构造�
 destructor
 ******************************
 destructor
-</code></pre><p>PS. 提供移动构造函数的同时也会提供一个拷贝构造函数, 以防止移动不成功的时候还能拷贝构造, 使代码更安全.</p>
+</code></pre><p>PS. <strong>提供移动构造函数的同时也会提供一个拷贝构造函数, 以防止移动不成功的时候还能拷贝构造, 使代码更安全.</strong></p>
+<p>注: 在移动构造函数内部, 如果具名使用参数 rhs, 则 rhs 仍是一个左值. 如下面代码:</p>
+<pre><code>#include &lt;iostream&gt;
+#include &lt;string&gt;
+
+using namespace std;
+class Foo
+{
+public:
+    Foo(const string&amp; s): data(s) {std::cout &lt;&lt; &quot;copy constructor&quot; &lt;&lt; std::endl;}
+    Foo(string&amp;&amp; s)
+    { 
+        data = s;     // s 具名, 是左值, 调用 string 的拷贝构造函数, 应换成 data(std::move(s))
+        std::cout &lt;&lt; &quot;move operator=&quot; &lt;&lt; std::endl;
+    }
+
+private: 
+    string data;
+};
+
+int main()
+{
+    string s1 = &quot;abc&quot;;
+    Foo f1 = Foo(std::move(s1));    // 调用 Foo 移动构造函数
+    return 0;
+}
+</code></pre><p>参考: <a href="https://www.zhihu.com/question/35100630" target="_blank" rel="external">https://www.zhihu.com/question/35100630</a></p>
 <h3 id="移动赋值运算符"><a href="#移动赋值运算符" class="headerlink" title="移动赋值运算符"></a>移动赋值运算符</h3><p>赋值运算符避免了赋值时的拷贝操作, 与拷贝赋值运算符不同的是, 其参数也是右值引用类型. 下面是 String 类的实现:</p>
 <pre><code>String&amp; operator=(String&amp;&amp; rhs) noexcept
 {
