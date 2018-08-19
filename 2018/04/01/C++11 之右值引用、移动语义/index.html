@@ -98,7 +98,7 @@ swap的实现, 交换两个对象template&amp;lt;typename T&amp;gt;
 inline void swap(T&amp;amp; a, T&amp;amp; b)
 {
     T temp(a);        // 调用拷贝构">
-<meta property="og:updated_time" content="2018-08-06T13:48:42.304Z">
+<meta property="og:updated_time" content="2018-08-19T14:00:18.586Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="C++11 之右值引用、移动语义">
 <meta name="twitter:description" content="移动语义(Move semantic)引入背景移动语义的引入是为了解决在进行大量数据复制的时候, 将动态内存的所有权直接转让出去, 避免大量的无用的拷贝操作. 如下面两种场景:
@@ -472,14 +472,14 @@ public:
 <p>在C++11之前, 引用类型如果想绑定到临时对象上, 只能使用 const 引用.</p>
 <pre><code>const String&amp; str = getString();        // OK
 String&amp; str = getName();                 // NOT ok
-</code></pre><p>临时对象是一个即将消失的对象, 不可以被改变, 所以将非const引用绑定到临时对象上是不允许的. 有了右值引用之后,</p>
+</code></pre><p>临时对象是一个即将消失的对象, 不可以被改变, 所以将非const 引用绑定到临时对象上是不允许的. 有了右值引用之后,</p>
 <pre><code>String&amp;&amp; str = getName();                 // also ok
 </code></pre><p>关于引用类型和对象的绑定, 有如下规则:</p>
 <ol>
-<li>非const左值引用只能绑定到非const左值，不能绑定到const右值、非const右值和const左值.</li>
-<li>const左值引用可以绑定到任何类型，包括const左值、非const左值、const右值和非const右值，属于万能引用类型. 其中绑定const右值的情况比较少, 但是语法上是可行的,比如const int &amp;a = 1, 但是通常一般都会直接使用int &amp;a = 1.</li>
-<li>非const右值引用不能绑定到任何左值和const右值，只能绑定非const右值.</li>
-<li><p>const右值引用类型仅是为了语法的完整性而设计的. 比如</p>
+<li>非 const 左值引用只能绑定到非 const 左值, 不能绑定到const右值、非const右值和const左值.</li>
+<li>const 左值引用可以绑定到任何类型, 包括 const左值、非const 左值、const 右值和非const 右值, 属于万能引用类型. 其中绑定const右值的情况比较少, 但是语法上是可行的, 比如const int &amp;a = 1, 但是通常一般都会直接使用int &amp;a = 1.</li>
+<li>非 const 右值引用不能绑定到任何左值和 const 右值，只能绑定非 const 右值.</li>
+<li><p>const 右值引用类型仅是为了语法的完整性而设计的. 比如</p>
 <pre><code>const String &amp;&amp;str = getName();
 </code></pre><p> 但是右值引用类型的引入主要是为了移动语义, 而移动语义需要右值引用是可以被修改的, 因此const右值引用类型没有实际意义.</p>
 </li>
@@ -503,7 +503,7 @@ int main() {
 }
 </code></pre><p>参考: <a href="http://blog.jobbole.com/89078/" target="_blank" rel="external">http://blog.jobbole.com/89078/</a></p>
 <h2 id="Move-semantic-实现"><a href="#Move-semantic-实现" class="headerlink" title="Move semantic 实现"></a>Move semantic 实现</h2><h3 id="意义"><a href="#意义" class="headerlink" title="意义"></a>意义</h3><p>移动语义的核心在于: 资源所有权的转让. 即进行数据复制的时候, 将动态申请的内存空间的所有权直接转让出去, 不用再另开辟空间进行大量的数据拷贝, 既节省空间又提高效率.  </p>
-<p>被移动的对象交出了所有权, 为了不出现析构两次同一对象, 要将交出所有权的对象的指向动态内存去的指针赋值为 nullptr, 对空指针执行delete[] 是合法的.</p>
+<p>被移动的对象交出了所有权, 为了不出现析构两次同一对象数据内存, 要将交出所有权的对象的指向动态内存去的指针赋值为 nullptr, 对空指针执行delete[] 是合法的.</p>
 <h3 id="移动构造函数"><a href="#移动构造函数" class="headerlink" title="移动构造函数"></a>移动构造函数</h3><p>移动构造函数避免了当函数返回对象产生临时对象时的拷贝操作, 其参数与拷贝构造函数的参数不同之处在于使用右值引用作为参数, 且不再是 const, 因为在移动构造函数里面需要修改右值的内容. 下面是 String 类的实现</p>
 <pre><code>String(String&amp;&amp; rhs) noexcept    // 移动操作不抛出任何异常
 : m_dataptr(rhs.m_dataptr)
@@ -628,8 +628,10 @@ decltype(auto) move(T&amp;&amp; param)
     using ReturnType = remove_reference_t&lt;T&gt;&amp;&amp;;
     return static_cast&lt;ReturnType&gt;(param);
 }
-</code></pre><p>参考: <a href="https://www.zhihu.com/question/50652989" target="_blank" rel="external">https://www.zhihu.com/question/50652989</a></p>
-<p>std::move() 通常用于触发移动语义, 即告诉编译器调用移动构造函数或移动赋值运算符.<br>C++11 标准库引入了std::move(), 则前面背景1 swap() 的实现改成了:</p>
+</code></pre><p>参考:<br><a href="https://www.zhihu.com/question/50652989" target="_blank" rel="external">https://www.zhihu.com/question/50652989</a><br><a href="https://en.cppreference.com/w/cpp/utility/move" target="_blank" rel="external">https://en.cppreference.com/w/cpp/utility/move</a><br><a href="https://en.cppreference.com/w/cpp/types/remove_reference" target="_blank" rel="external">https://en.cppreference.com/w/cpp/types/remove_reference</a></p>
+<pre><code>template&lt; class T &gt;
+using remove_reference_t = typename remove_reference&lt;T&gt;::type (since C++14)
+</code></pre><p>std::move() 通常用于触发移动语义, 即告诉编译器调用移动构造函数或移动赋值运算符.<br>C++11 标准库引入了std::move(), 则前面背景1 swap() 的实现改成了:</p>
 <pre><code>template&lt;typename T&gt;
 void swap(T&amp; a, T&amp; b)
 {
@@ -669,7 +671,7 @@ public:
     std::string str = &quot;Hello&quot;;
     std::vector&lt;std::string&gt; v;
 
-    v.push_back(str);   // call  push_back(const T&amp;) 
+    v.push_back(str);   // call push_back(const T&amp;) 
     std::cout &lt;&lt; &quot;After copy, str is \&quot;&quot; &lt;&lt; str &lt;&lt; &quot;\&quot;\n&quot;;
 
     v.push_back(std::move(str));    //rvalue reference, push_back(T&amp;&amp;)
